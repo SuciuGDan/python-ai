@@ -19,7 +19,7 @@ received_user = {
     "age": 30,
     "nationality": "Romanian",
     "address":{
-        "city": "Moldovean",
+        "city": "Cluj",
         "street": "Romanian",
 }
 }
