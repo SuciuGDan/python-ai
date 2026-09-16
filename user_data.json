@@ -1,0 +1,9 @@
+{
+    "name": "Nicu",
+    "age": 30,
+    "nationality": "Romanian",
+    "address":{
+        "city": "Cluj",
+        "street": "Romanian"
+    }
+}

@@ -21,13 +21,14 @@ received_user = {
     "address":{
         "city": "Cluj",
         "street": "Romanian",
-}
+    }
 }
 
-print("=======================Validations=======================")
-try:
-    validated_user = UserValidator.model_validate(received_user, strict=True)
-    print(validated_user)
-except ValidationError as e:
-    print(e)
-    print(e.errors)
+if __name__ == "__main__":
+    print("=======================Validations=======================")
+    try:
+        validated_user = UserValidator.model_validate(received_user, strict=True)
+        print(validated_user)
+    except ValidationError as e:
+        print(e)
+        print(e.errors)
