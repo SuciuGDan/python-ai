@@ -44,12 +44,12 @@ def test_invalid_user():
     with pytest.raises(ValidationError):
         UserValidator.model_validate(user_data, strict=True)
 
-@pytest.mark.parametrize("age",[-1, 13, 500, 100])
+@pytest.mark.parametrize("age",[-1, 123, 500, 150])
 def test_user_age_validation(age):
   with pytest.raises(ValidationError):
     received_user = {
         "name": "Vicentiu",
-        "age": 25,
+        "age": age,
         "nationality": "Romanian",
         "address": {
             "city": "Cluj",
