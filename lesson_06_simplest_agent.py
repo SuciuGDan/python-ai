@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel,Field,ValidationError
 from dotenv import load_dotenv
 from openai import OpenAI
+import json
 
 
 
@@ -97,8 +98,16 @@ def main():
         "function": {
             "name": "run_tests",
             "description": "Run uv run pytest",
+            },
         },
-    }]
+        {
+            "type": "function",
+            "function": {
+                "name": "summarize_file",
+                "description": "Reads and summarizes a text file in the current project, as JSON output"
+            }
+        }
+    ]
 
 
     messages = []
@@ -124,12 +133,22 @@ def main():
 
         if response.tool_calls:
             for tool_call in response.tool_calls:
-                output = run_tests()
-                messages.append({
-                    "role":"tool",
-                    "tool_call_id": tool_call.id,
-                    "content": output,
-                })
+                tool_name = tool_call.function.name
+                if tool_name == "summarize_file":
+                    args = json.loads(tool_call.function.arguments)
+                    output = summarize_file(client, args)
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": output,
+                    })
+                if tool_name == "run_tests":
+                    output = run_tests()
+                    messages.append({
+                        "role":"tool",
+                        "tool_call_id": tool_call.id,
+                        "content": output,
+                    })
 
             #without this response, the agent stays behind with 1 step
             response = complete(client, messages, tools)
