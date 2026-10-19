@@ -1,0 +1,8 @@
+2026-10-19 09:00:01 INFO  checkout-service started
+2026-10-19 09:00:02 INFO  database connection ready
+2026-10-19 09:05:14 INFO  order 1042 payment started
+2026-10-19 09:05:19 ERROR payment provider timeout for order 1042
+2026-10-19 09:05:20 WARNING retrying payment for order 1042
+2026-10-19 09:06:11 ERROR payment provider timeout for order 1042
+2026-10-19 09:06:12 WARNING giving up after 2 attempts for order 1042
+2026-10-19 09:10:00 INFO  health check passed

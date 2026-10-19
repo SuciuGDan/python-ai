@@ -1,64 +1,80 @@
+from pathlib import Path
 from typing import TypedDict
-from langgraph.graph import  StateGraph, START, END
 
-# langgraph
+from langgraph.graph import START, END, StateGraph
+from pydantic import BaseModel, ConfigDict, Field
+from requests import request
 
+PROJECT_ROOT = Path(__file__).resolve().parent
 
-#state:
+# state:
+class State(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
-class State(TypedDict):
-    pass
-
-BRANCH_CONDITION = False
-
-def start_node(state:State):
-    print("Node 1 takes an action and makes the first step. Start!")
-
-
-#conditional function, picks the next node
-
-def choose_branch(state:State):
-    #poate fi o decizie deterministica, cu cod deterministic. sau poate fi o decizie luata de un model LLM
-
-    #decizie deterministica
-    if BRANCH_CONDITION:
-        return "left_node"
-    else:
-        return "right_node"
+    log_file: str = Field(default="", description="Name of the log report file.")
+    errors: list[str] = Field(default_factory=list)
+    response: str = ""
 
 
-def left_node(state:State):
-    print("Node 2, we chose the left branch")
+def read_log_report(state: State):
+    path = PROJECT_ROOT / state.log_file
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
 
-def right_node(state:State):
-    print("Node 3, we chose the right branch")
+    errors = []
+    for line in lines:
+        if "ERROR" in line:
+            errors.append(line)
 
-def last_node(state:State):
-    print("Last node byebye")
+    print("start> reading ", path.name)
+    print("start> errors found: ", len(errors))
+
+    # ii dam lui langgraph un state partial care va fi updatat in state-ul intreg.
+    # reducer
+    return {"errors": errors}
+
+def check_for_errors(state: State):
+    if len(state.errors) > 0:
+        return "call_incident_api"
+    return "report_all_ok"
+
+def call_incident_api(state: State):
+    print("action> calling our incident api")
+    req = request("POST", "https://jsonplaceholder.typicode.com/todos/")
+    c = len(state.errors)
+    print(f"info> sent {c} errors to our incident API.")
+
+    return {"response": str(req)}
+
+def report_all_ok(state: State):
+    print("action> Nothing to worry about, everything OK. No errors found in logs.")
+    return {"response": "No errors found in logs."}
+
 
 def build_graph():
     builder = StateGraph(State)
 
-    builder.add_node("start_node", start_node)
-    builder.add_node("left_node", left_node)
-    builder.add_node("right_node", right_node)
-    builder.add_node("last_node", last_node)
+    builder.add_node("read_log_report", read_log_report)
+    builder.add_node("call_incident_api", call_incident_api)
+    builder.add_node("report_all_ok", report_all_ok)
 
-    builder.add_edge(START, "start_node")
-    builder.add_conditional_edges("start_node",choose_branch)
-    builder.add_edge("left_node","last_node")
-    builder.add_edge("right_node","last_node")
-    builder.add_edge("last_node", END)
+    builder.add_edge(START, "read_log_report")
+    builder.add_conditional_edges("read_log_report", check_for_errors)
+    builder.add_edge("call_incident_api", END)
+    builder.add_edge("report_all_ok", END)
 
     return builder.compile()
 
 
 def main():
     graph = build_graph()
+    initial_state = State(log_file="log_report.txt")
 
-    print("====== run starts ======")
-    graph.invoke({})
-    print("====== run ends =======")
+    print("======= run starts ========")
+    result = graph.invoke(initial_state)
+    print("errors found: ", result["errors"])
+    print("response: ", result["response"])
+    print("======= run ends   ========")
 
 
 

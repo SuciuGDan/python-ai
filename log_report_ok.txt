@@ -1,0 +1,5 @@
+2026-10-19 09:00:01 INFO  checkout-service started
+2026-10-19 09:00:02 INFO  database connection ready
+2026-10-19 09:05:14 INFO  order 1042 payment started
+2026-10-19 09:05:18 INFO  order 1042 payment completed
+2026-10-19 09:10:00 INFO  health check passed
