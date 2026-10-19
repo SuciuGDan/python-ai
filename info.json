@@ -1,0 +1,9 @@
+{
+  "logs": [{
+    "level": "INFO",
+    "message": "Server started"
+  },{
+    "level": "ERROR",
+    "message": "Some of the k8s pods are offline"
+  }]
+}
