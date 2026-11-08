@@ -35,7 +35,7 @@ INVOICES_FILE_PATH = "invoices.pdf"
 
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 120
-HYBRID_SEARCH_RESULT_COUNT = 8
+HYBRID_SEARCH_RESULT_COUNT = 10
 
 
 class SearchRequest(BaseModel):
@@ -66,6 +66,9 @@ def chunk_text(text: str) -> list[str]:
 def index_file(collection, model, file_path):
     pages = pymupdf4llm.to_markdown(str(file_path), page_chunks=True)
     records = []
+    ids = []
+    documents = []
+    metadatas = []
 
     for page in pages:
         page_number = page["metadata"]["page_number"]
@@ -78,27 +81,18 @@ def index_file(collection, model, file_path):
             # tuples -> ("john", "carpenter", 33)
             #                 0            1   2
             records.append((chunk, page_number, chunk_number))
+            ids.append(f"{file_path.name}:p{page_number}:c{chunk_number}")
+            documents.append(chunk)
+            metadatas.append(
+                {
+                    "source": file_path.name,
+                    "page": page_number,
+                    "chunk": chunk_number,
+                }
+            )
             chunk_number += 1
 
     collection.delete(where={"source": file_path.name})
-    ids = []
-    documents = []
-    metadatas = []
-
-    # records = [("text here", 1, 1), ("some more text", 1, 2), ...]
-    for record in records:
-        chunk = record[0]
-        page_number = record[1]
-        chunk_number = record[2]
-        ids.append(f"{file_path.name}:p{page_number}:c{chunk_number}")
-        documents.append(chunk)
-        metadatas.append(
-            {
-                "source": file_path.name,
-                "page": page_number,
-                "chunk": chunk_number,
-            }
-        )
 
     collection.upsert(
         ids=ids,
